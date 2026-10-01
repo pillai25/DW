@@ -2,11 +2,11 @@
 
 1. Implementation of Star and Snowflake Schemas
 Objective: Create a physical database structure based on a conceptual model.
-Practical: Write SQL DDL to create Fact and Dimension tables. Establish primary and foreign key relationships that enforce referential integrity within a Star or Snowflake schema.
+Practical: Write SQL DDL to create Fact and Dimension tables. Establish primary and foreign key relationships
+that enforce referential integrity within a Star or Snowflake schema.
 
 SQL DDL for Star Schema
 Dimension Tables:
--- Product Dimension
 CREATE TABLE Dim_Product (
     Product_ID INT PRIMARY KEY,
     Product_Name VARCHAR(100),
@@ -14,7 +14,6 @@ CREATE TABLE Dim_Product (
     Brand VARCHAR(50)
 );
 
--- Customer Dimension
 CREATE TABLE Dim_Customer (
     Customer_ID INT PRIMARY KEY,
     Customer_Name VARCHAR(100),
@@ -23,7 +22,6 @@ CREATE TABLE Dim_Customer (
     State VARCHAR(50)
 );
 
--- Time Dimension
 CREATE TABLE Dim_Time (
     Time_ID INT PRIMARY KEY,
     Day INT,
@@ -32,7 +30,6 @@ CREATE TABLE Dim_Time (
     Year INT
 );
 
--- Store Dimension
 CREATE TABLE Dim_Store (
     Store_ID INT PRIMARY KEY,
     Store_Name VARCHAR(100),
@@ -55,9 +52,8 @@ CREATE TABLE Fact_Sales (
 **
 2. Complex Joins for De-normalization
 Objective: Flatten normalized data into a warehouse-ready format.
-Practical: Use Self-Joins, Multiple Inner/Outer Joins, and Cross Joins to combine data from 5+ normalized tables into a single wide "denormalized" view for reporting.
-
-
+Practical: Use Self-Joins, Multiple Inner/Outer Joins, and Cross Joins to combine data 
+from 5+ normalized tables into a single wide "denormalized" view for reporting.
 
    CREATE TABLE Customers (
     CustomerID INT PRIMARY KEY,
@@ -103,18 +99,13 @@ CREATE VIEW Sales_Report AS
 SELECT
     o.OrderID,
     o.OrderDate,
-
     c.CustomerID,
     c.CustomerName,
     c.City,
-
     p.ProductID,
     p.ProductName,
-
     cat.CategoryName,
-
     od.Quantity,
-
     e.EmployeeName AS Salesperson,
     m.EmployeeName AS Manager
 
@@ -148,7 +139,8 @@ CROSS JOIN Categories c;
 **practical no 3
 **Advanced Aggregations with ROLLUP and CUBE
 Objective: Create multi-level summary reports.
-Practical: Use the GROUP BY ROLLUP and GROUP BY CUBE clauses to generate hierarchical subtotals (e.g., Sales by Day > Month > Year) in a single query result set.
+Practical: Use the GROUP BY ROLLUP and GROUP BY CUBE clauses to generate hierarchical subtotals 
+(e.g., Sales by Day > Month > Year) in a single query result set.
 
 CREATE TABLE Sales (
     SaleID NUMBER PRIMARY KEY,
@@ -220,10 +212,8 @@ ORDER BY Year, Month, Product;
 **
 Ranking and Window Functions
 Objective: Analyze data relative to other rows without grouping.
-Practical: Implement RANK(), DENSE_RANK(), and ROW_NUMBER() to find "Top N" products per category or identify the highest-earning employees in each department.
-
-
-
+Practical: Implement RANK(), DENSE_RANK(), and ROW_NUMBER() to find "Top N" products per category
+or identify the highest-earning employees in each department.
 
 CREATE TABLE Employee2 (
     EmpID NUMBER PRIMARY KEY,
@@ -320,6 +310,451 @@ FROM
     FROM ProductSales
 )
 WHERE Rank_No = 1;
+
+
+
+**Practical no 5
+**
+Compare current performance against previous periods.
+Practical: Use LAG() and LEAD() window functions to calculate Month-over-Month (MoM) 
+growth or identify trends in historical sales data.
+
+CREATE TABLE MonthlySales (
+    MonthID INT PRIMARY KEY,
+    MonthName VARCHAR(20),
+    Sales DECIMAL(10,2)
+);
+
+INSERT INTO MonthlySales VALUES (1,'January',50000);
+INSERT INTO MonthlySales VALUES (2,'February',55000);
+INSERT INTO MonthlySales VALUES (3,'March',60000);
+INSERT INTO MonthlySales VALUES (4,'April',58000);
+INSERT INTO MonthlySales VALUES (5,'May',65000);
+INSERT INTO MonthlySales VALUES (6,'June',70000);
+
+COMMIT;
+SELECT * FROM MonthlySales;
+
+SELECT
+    MonthID,
+    MonthName,
+    Sales,
+    LAG(Sales) OVER (ORDER BY MonthID) AS Previous_Month_Sales
+FROM MonthlySales;
+
+SELECT
+    MonthID,
+    MonthName,
+    Sales,
+    LEAD(Sales) OVER (ORDER BY MonthID) AS Next_Month_Sales
+FROM MonthlySales;
+
+SELECT
+    MonthID,
+    MonthName,
+    Sales,
+    LAG(Sales) OVER (ORDER BY MonthID) AS Previous_Sales,
+    ROUND(
+        ((Sales - LAG(Sales) OVER (ORDER BY MonthID))
+        / LAG(Sales) OVER (ORDER BY MonthID)) * 100,
+        2
+    ) AS MoM_Growth_Percentage
+
+FROM MonthlySales;
+
+SELECT
+    MonthID,
+    MonthName,
+    Sales,
+    LAG(Sales) OVER (ORDER BY MonthID) AS Previous_Sales,
+    CASE
+        WHEN LAG(Sales) OVER (ORDER BY MonthID) IS NULL
+            THEN 'No Previous Data'
+        WHEN Sales > LAG(Sales) OVER (ORDER BY MonthID)
+            THEN 'Increasing'
+        WHEN Sales < LAG(Sales) OVER (ORDER BY MonthID)
+            THEN 'Decreasing'
+        ELSE 'No Change'
+    END AS Sales_Trend
+
+FROM MonthlySales;
+
+SELECT
+    MonthID,
+    MonthName,
+    Sales,
+    LEAD(Sales) OVER (ORDER BY MonthID) AS Next_Month_Sales,
+    LEAD(Sales) OVER (ORDER BY MonthID) - Sales
+    AS Difference
+
+FROM MonthlySales;
+
+SELECT
+    MonthID,
+    MonthName,
+    Sales,
+    LAG(Sales) OVER (ORDER BY MonthID) AS Previous_Sales,
+    LEAD(Sales) OVER (ORDER BY MonthID) AS Next_Sales
+
+FROM MonthlySales;
+
+SELECT
+    MonthID,
+    MonthName,
+    Sales,
+    LAG(Sales) OVER (ORDER BY MonthID) AS Previous_Sales,
+    Sales - LAG(Sales) OVER (ORDER BY MonthID)
+    AS Sales_Difference
+
+FROM MonthlySales;
+
+
+**Practical no 6
+**
+Display Hierarchy, Display Reporting Levels
+
+CREATE TABLE Employeee (
+    EmpID INT PRIMARY KEY,
+    EmpName VARCHAR (50),
+    Department VARCHAR (30),
+    Salary DECIMAL (10,2)
+);
+
+INSERT INTO Employeee VALUES (101, 'Amit', 'HR', 45000);
+INSERT INTO Employeee VALUES (102, 'Neha', 'HR', 52000);
+INSERT INTO Employeee VALUES (103, 'Rahul', 'IT', 70000);
+INSERT INTO Employeee VALUES (104, 'Priya', 'IT', 65000);
+INSERT INTO Employeee VALUES (105, 'Kiran', 'Sales', 48000);
+INSERT INTO Employeee VALUES (106, 'Anita', 'Sales', 55000);
+INSERT INTO Employeee VALUES (107, 'Vikas', 'IT', 90000);
+
+
+SELECT EmpName, Salary
+FROM Employeee
+WHERE Salary >
+(
+    SELECT AVG(Salary)
+    FROM Employeee
+);
+
+
+WITH AvgSalary AS
+(
+    SELECT AVG(Salary) AS AvgSal
+    FROM Employeee
+)
+
+SELECT EmpName, Salary
+FROM Employeee
+JOIN AvgSalary
+ON Employeee.Salary > AvgSalary.AvgSal;
+
+
+SELECT EmpName, Department, Salary
+FROM Employeee E
+WHERE Salary = (
+    SELECT MAX(Salary)
+    FROM Employeee
+    WHERE Department = E.Department
+);
+
+WITH DeptMax AS
+(
+    SELECT Department,
+           MAX(Salary) AS MaxSalary
+    FROM Employeee
+    GROUP BY Department
+)
+
+SELECT E.EmpName,
+       E.Department,
+       E.Salary
+FROM Employeee E
+JOIN DeptMax d
+ON E.Department=D.Department
+AND E.Salary=D.MaxSalary;
+
+
+CREATE TABLE Employees (
+    EmpID NUMBER PRIMARY KEY,
+    EmpName VARCHAR2(50),
+    ManagerID NUMBER
+);
+
+INSERT INTO Employeees VALUES (1, 'CEO', NULL);
+INSERT INTO Employeees VALUES (2, 'Manager A', 1);
+INSERT INTO Employeees VALUES (3, 'Manager B', 1);
+INSERT INTO Employeees VALUES (4, 'Team Lead A', 2);
+INSERT INTO Employeees VALUES (5, 'Developer A', 4);
+INSERT INTO Employeees VALUES (6, 'Developer B', 4);
+INSERT INTO Employeees VALUES (7, 'HR Executive', 2);
+INSERT INTO Employeees VALUES (8, 'Sales Executive', 3);
+
+
+Display Hierarchy with Manager Names
+SELECT
+    EmpID,
+    EmpName,
+    ManagerID,
+    SYS_CONNECT_BY_PATH(EmpName, ' -> ') AS Hierarchy
+FROM Employees
+START WITH ManagerID IS NULL
+CONNECT BY PRIOR EmpID = ManagerID;
+
+Display Reporting Levels:
+SELECT
+    EmpName,
+    LEVEL - 1 AS ReportingLevel
+FROM Employees
+START WITH ManagerID IS NULL
+CONNECT BY PRIOR EmpID = ManagerID;
+
+**Practical no 7
+**
+Use the PIVOT operator (or CASE WHEN logic) to turn monthly sales rows 
+into columns for a "Side-by-Side" yearly comparison report.
+
+CREATE TABLE Sales2 (
+    SalesYear NUMBER,
+    Month VARCHAR2(10),
+    SalesAmount NUMBER
+);
+
+INSERT INTO Sales2 VALUES (2024,'Jan',5000);
+INSERT INTO Sales2 VALUES (2024,'Feb',7000);
+INSERT INTO Sales2 VALUES (2024,'Mar',6000);
+
+INSERT INTO Sales2 VALUES (2025,'Jan',6500);
+INSERT INTO Sales2 VALUES (2025,'Feb',8000);
+INSERT INTO Sales2 VALUES (2025,'Mar',7500);
+
+COMMIT;
+
+SELECT
+    Month,
+    SUM(CASE WHEN SalesYear = 2024 THEN SalesAmount ELSE 0 END) AS Sales_2024,
+    SUM(CASE WHEN SalesYear = 2025 THEN SalesAmount ELSE 0 END) AS Sales_2025
+FROM Sales2
+GROUP BY Month
+ORDER BY Month;
+
+
+**Practical no 8**
+Write an UPDATE/INSERT script to implement SCD Type 2. This involves using SQL to expire old records
+(setting an end_date) and inserting new versions of a record to keep history.
+
+CREATE TABLE Employee_Dim (
+    EmpID NUMBER,
+    EmpName VARCHAR2(50),
+    Department VARCHAR2(30),
+    Start_Date DATE,
+    End_Date DATE,
+    Is_Current CHAR(1)
+);
+
+INSERT INTO Employee_Dim
+VALUES (101, 'Amit', 'IT', DATE '2024-01-01', NULL, 'Y');
+
+COMMIT;
+
+UPDATE Employee_Dim
+SET End_Date = DATE '2025-06-30',
+    Is_Current = 'N'
+WHERE EmpID = 101
+AND Is_Current = 'Y';
+
+INSERT INTO Employee_Dim
+VALUES (101, 'Amit', 'HR', DATE '2025-07-01', NULL, 'Y');
+
+COMMIT;
+
+SELECT *
+FROM Employee_Dim
+ORDER BY EmpID, Start_Date;
+
+**Practical no 9
+**
+Create Materialized Views to pre-calculate heavy aggregations. Compare the execution plan (using EXPLAIN) of a 
+query before and after adding B-Tree or Bitmap indexes.
+
+CREATE TABLE sales4 (
+    sale_id       NUMBER PRIMARY KEY,
+    product_id    NUMBER,
+    customer_id   NUMBER,
+    sale_date     DATE,
+    quantity      NUMBER,
+    amount        NUMBER,
+    region        VARCHAR2(30)
+);
+
+CREATE TABLE products4 (
+    product_id    NUMBER PRIMARY KEY,
+    product_name  VARCHAR2(100),
+    category      VARCHAR2(50)
+);
+
+EXPLAIN PLAN FOR
+SELECT
+    p.category,
+    s.region,
+    SUM(s.amount) AS total_sales,
+    AVG(s.amount) AS avg_sales,
+    COUNT(*) AS total_transactions
+FROM sales4 s
+JOIN products4 p
+    ON s.product_id = p.product_id
+GROUP BY p.category, s.region;
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+
+CREATE MATERIALIZED VIEW mv_sales_summary
+BUILD IMMEDIATE
+REFRESH COMPLETE
+ON DEMAND
+AS
+SELECT
+    p.category,
+    s.region,
+    SUM(s.amount) AS total_sales,
+    AVG(s.amount) AS avg_sales,
+    COUNT(*) AS total_transactions
+FROM sales4 s
+JOIN products4 p
+    ON s.product_id = p.product_id
+GROUP BY p.category, s.region;
+
+EXPLAIN PLAN FOR
+SELECT
+    category,
+    region,
+    total_sales,
+    avg_sales,
+    total_transactions
+FROM mv_sales_summary;
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+CREATE INDEX idx_sales_product
+ON sales4(product_id);
+
+CREATE INDEX idx_sales_date
+ON sales4(sale_date);
+
+EXPLAIN PLAN FOR
+SELECT *
+FROM sales4
+WHERE product_id = 100;
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+CREATE BITMAP INDEX idx_sales_region_bitmap
+ON sales4(region);
+
+EXPLAIN PLAN FOR
+SELECT *
+FROM sales4
+WHERE region = 'WEST';
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+CREATE INDEX idx_sales_customer
+ON sales(customer_id);
+
+EXPLAIN PLAN FOR
+SELECT *
+FROM sales4
+WHERE customer_id = 101;
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+-- Bitmap
+CREATE BITMAP INDEX idx_sales_region
+ON sales4(region);
+
+EXPLAIN PLAN FOR
+SELECT *
+FROM sales4
+WHERE region = 'WEST';
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+**practical no 10
+
+DIRTY DATA IDENTIFICATION AND PREVENTION
+
+1. Create table
+CREATE TABLE customers7 (
+    id NUMBER PRIMARY KEY,
+    name VARCHAR2(50),
+    age NUMBER,
+    email VARCHAR2(100)
+);
+
+-- 2. Insert sample data
+INSERT INTO customers7 VALUES (1, 'John', 25, 'john@gmail.com');
+INSERT INTO customers7 VALUES (2, 'Sam', 30, 'sam@gmail.com');
+INSERT INTO customers7 VALUES (3, 'Tom', 150, 'tom@gmail.com');
+INSERT INTO customers7 VALUES (4, 'Mike', 25, NULL);
+INSERT INTO customers7 VALUES (5, 'Bob', 30, 'sam@gmail.com');
+
+COMMIT;
+
+
+ 3. FIND NULL VALUES
+
+SELECT *
+FROM customers7
+WHERE email IS NULL;
+
+ 4. FIND DUPLICATE VALUES
+
+SELECT email, COUNT(*)
+FROM customers7
+GROUP BY email
+HAVING COUNT(*) > 1;
+
+ 6. FIND OUTLIERS
+
+SELECT *
+FROM customers7
+WHERE age > 100;
+
+
+ 6. FIX NULL EMAIL
+UPDATE customers7
+SET email = 'unknown@gmail.com'
+WHERE email IS NULL;
+
+COMMIT;
+
+ 7. CHECK CONSTRAINT FOR EMAIL
+ALTER TABLE customers7
+ADD CONSTRAINT chk_email
+CHECK (email IS NOT NULL);
+
+
+8. CHECK CONSTRAINT FOR AGE
+
+ALTER TABLE customers7
+ADD CONSTRAINT chk_age
+CHECK (age BETWEEN 1 AND 200);
+
+
+9. TEST CONSTRAINT
+This should give an error
+
+INSERT INTO customers7
+VALUES (6, 'Alex', 150, 'alex@gmail.com');
+
+10. TEST NULL EMAIL
+ This should also give an error
+
+INSERT INTO customers7
+VALUES (7, 'David', 25, NULL);
+
+
+
 
 
 
