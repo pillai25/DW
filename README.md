@@ -38,7 +38,7 @@ CREATE TABLE Dim_Store (
 );
 
 2. Fact Table: 
-CREATE TABLE Fact_Sales (
+CREATE TABLE Fact_Sales303 (
     Sales_ID INT PRIMARY KEY,
     Product_ID INT,
     Customer_ID INT,
@@ -46,6 +46,15 @@ CREATE TABLE Fact_Sales (
     Store_ID INT,
     Quantity_Sold INT,
     Sales_Amount DECIMAL(10,2),
+
+    CONSTRAINT FK_FS_PRODUCT
+        FOREIGN KEY (Product_ID)
+        REFERENCES Dim_Product(Product_ID),
+
+    CONSTRAINT FK_FS_CUSTOMER
+        FOREIGN KEY (Customer_ID)
+        REFERENCES Dim_Customer(Customer_ID)
+);
 
 
 **practical no 2
