@@ -7,6 +7,7 @@ that enforce referential integrity within a Star or Snowflake schema.
 
 SQL DDL for Star Schema
 Dimension Tables:
+code:-
 CREATE TABLE Dim_Product (
     Product_ID INT PRIMARY KEY,
     Product_Name VARCHAR(100),
@@ -63,7 +64,7 @@ CREATE TABLE Fact_Sales303 (
 Objective: Flatten normalized data into a warehouse-ready format.
 Practical: Use Self-Joins, Multiple Inner/Outer Joins, and Cross Joins to combine data 
 from 5+ normalized tables into a single wide "denormalized" view for reporting.
-
+code:-
    CREATE TABLE Customers (
     CustomerID INT PRIMARY KEY,
     CustomerName VARCHAR(100),
@@ -150,7 +151,7 @@ CROSS JOIN Categories c;
 Objective: Create multi-level summary reports.
 Practical: Use the GROUP BY ROLLUP and GROUP BY CUBE clauses to generate hierarchical subtotals 
 (e.g., Sales by Day > Month > Year) in a single query result set.
-
+code:-
 CREATE TABLE Sales (
     SaleID NUMBER PRIMARY KEY,
     SaleDate DATE,
@@ -223,7 +224,7 @@ Ranking and Window Functions
 Objective: Analyze data relative to other rows without grouping.
 Practical: Implement RANK(), DENSE_RANK(), and ROW_NUMBER() to find "Top N" products per category
 or identify the highest-earning employees in each department.
-
+code:-
 CREATE TABLE Employee2 (
     EmpID NUMBER PRIMARY KEY,
     EmpName VARCHAR2(50),
@@ -327,6 +328,7 @@ WHERE Rank_No = 1;
 Compare current performance against previous periods.
 Practical: Use LAG() and LEAD() window functions to calculate Month-over-Month (MoM) 
 growth or identify trends in historical sales data.
+code:-
 
 CREATE TABLE MonthlySales (
     MonthID INT PRIMARY KEY,
@@ -421,6 +423,7 @@ FROM MonthlySales;
 **Practical no 6
 **
 Display Hierarchy, Display Reporting Levels
+code:-
 
 CREATE TABLE Employeee (
     EmpID INT PRIMARY KEY,
@@ -522,6 +525,7 @@ CONNECT BY PRIOR EmpID = ManagerID;
 **
 Use the PIVOT operator (or CASE WHEN logic) to turn monthly sales rows 
 into columns for a "Side-by-Side" yearly comparison report.
+code:-
 
 CREATE TABLE Sales2 (
     SalesYear NUMBER,
@@ -551,6 +555,7 @@ ORDER BY Month;
 **Practical no 8**
 Write an UPDATE/INSERT script to implement SCD Type 2. This involves using SQL to expire old records
 (setting an end_date) and inserting new versions of a record to keep history.
+code:-
 
 CREATE TABLE Employee_Dim (
     EmpID NUMBER,
@@ -585,6 +590,7 @@ ORDER BY EmpID, Start_Date;
 **
 Create Materialized Views to pre-calculate heavy aggregations. Compare the execution plan (using EXPLAIN) of a 
 query before and after adding B-Tree or Bitmap indexes.
+code:-
 
 CREATE TABLE sales4 (
     sale_id       NUMBER PRIMARY KEY,
@@ -691,6 +697,7 @@ SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
 **practical no 10
 
 DIRTY DATA IDENTIFICATION AND PREVENTION
+code:-
 
 1. Create table
 CREATE TABLE customers7 (
